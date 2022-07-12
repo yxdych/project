@@ -18,9 +18,10 @@ class Order extends BusBase
          //订单号
 //        $work=rand(1,1023);
         $snowflake = new Snowflake();
-        $snowflake->id();
+        $orderId= $snowflake->id();
         //获取用户redis 购物车数据
         $carObj= new  Cart();
         $res=$carObj->getRedisCartLists($data['user_id'],$data['ids']);
+        dd($res);
     }
 }

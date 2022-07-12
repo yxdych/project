@@ -9,28 +9,34 @@ use app\common\lib\Show;
 class Index extends AuthBase
 {
 
-    public function save()
-    {
-        $addressId = input('address_id', 0, 'intval');
-        $ids = input('ids', '', 'trim');
-        if (!$addressId || !$ids) {
-            return Show::error();
+
+    public function save() {
+        $addressId = input("param.address_id", 0, "intval");
+        $ids = input("param.ids", "", "trim");
+        if(!$ids) {
+            // 参数适配
+            $ids = input("param.cart_ids", "", "trim");
         }
+        if(!$addressId || !$ids) {
+            return Show::error("参数错误");
+        }
+
         $data = [
-            'ids' => $ids,
-            'address_id' => $addressId,
-            'user_id' => $this->userId
+            "ids" => $ids,
+            "address_id" => $addressId,
+            "user_id" => $this->userId,
         ];
         try {
-            $result=(new Order())->save($data);
-        }catch (\Exception $e){
-            return  Show::error($e->getMessage());
+            $result = (new Order())->save($data);
+        }catch (\Exception $e) {
+            return Show::error($e->getMessage());
         }
-        if (!$result)
-        {
-            return Show::error('提交订单失败，请重试');
+        if(!$result) {
+            return Show::error("提交订单失败，请稍候重试");
         }
         return Show::success($result);
+
     }
+
 
 }
