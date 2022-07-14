@@ -36,36 +36,50 @@ class Cart extends BusBase
 
     public function getRedisCartLists($userId, $ids)
     {
-        try {
-            if ($ids) {
-                $ids = explode(',', $ids);
+          try {
+            if($ids) {
+                $ids = explode(",", $ids);
                 $res = Cache::hMget(Key::userCart($userId), $ids);
-                if (in_array(false,array_values($res))){
-                        return [];
+                if(in_array(false, array_values($res))) {
+                    return [];
                 }
             } else {
                 $res = Cache::hGetAll(Key::userCart($userId));
             }
-        } catch (\Exception $e) {
+        }catch (\Exception $e) {
             $res = [];
         }
-        if (empty($res)) {
+        if(!$res) {
             return [];
         }
+
         $result = [];
-        $skuId = array_keys($res);
-        $skus = (new GoodsSku())->getNormalInIds($skuId);
+        $skuIds = array_keys($res);
+
+        $skus = (new GoodsSku())->getNormalInIds($skuIds);
+        //真是库存 id =》库存
+        $stocks = array_column($skus, "stock", "id");
         $skuIdPrice = array_column($skus, "price", "id");
         $skuIdSpecsValueIds = array_column($skus, "specs_value_ids", "id");
         $specsValues = (new SpecsValue())->dealSpecsValue($skuIdSpecsValueIds);
-        foreach ($res as $k => $v) {
+        foreach($res as $k => $v) {
+        dd($stocks);
+
+            $price = $skuIdPrice[$k] ?? 0;
             $v = json_decode($v, true);
+            if($ids && isset($stocks[$k]) && $stocks[$k] < $v['num']) {
+                throw new \think\Exception($v['title']."的商品库存不足");
+            }
             $v['id'] = $k;
-            $v['price'] = $skuIdPrice[$k] ?? O;
-            $v['total_price'] = '';
+            $v['image'] = preg_match("/http:\/\//", $v['image']) ? $v['image'] : request()->domain().$v['image'];
+            $v['price'] = $price;
+            $v['total_price'] = $price * $v['num'];
             $v['sku'] = $specsValues[$k] ?? "暂无规则";
             $result[] = $v;
         }
-        return  $result;
+        if(!empty($result)) {
+            $result = Arr::arrsSortByKey($result, "create_time");
+        }
+        return $result;
     }
-}
+} 
