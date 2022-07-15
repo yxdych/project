@@ -16,7 +16,7 @@ class Order extends BusBase
     public function save($data)
     {
          //订单号
-//        $work=rand(1,1023);
+//      $work=rand(1,1023);
         $snowflake = new Snowflake();
         $orderId= $snowflake->id();
         //获取用户redis 购物车数据

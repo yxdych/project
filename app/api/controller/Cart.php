@@ -16,12 +16,9 @@ class Cart extends AuthBase
         if (!$id || !$num) {
             return Show::error([], '参数不合法');
         }
-        $result = (new  \app\common\business\Cart())->insertRedis($this->userId, $id, $num);
-        if ($result === FALSE) {
-            return Show::error();
-        }
 
-        return Show::success();
+        $result = (new  \app\common\business\Cart())->insertRedis($this->userId, $id, $num);
+        return Show::success($result);
     }
 
     public function lists()

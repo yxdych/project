@@ -9,27 +9,31 @@ class Cart extends BusBase
 {
     public function insertRedis($userId, $id, $num)
     {
-        $goodsSku = (new GoodsSku())->getNormalSkuAndGoods($id);
-        if (!$goodsSku) {
-            return FALSE;
-        }
-        $data = [
-            'title' => $goodsSku['goods']['title'],
-            'image' => $goodsSku['goods']['recommend_image'],
-            'num' => $num,
-            'goods_id' => $goodsSku['goods']['id'],
-            'create_time' => time(),
-        ];
-
+        
         try {
+            $goodsSku = (new GoodsSku())->getNormalSkuAndGoods($id);
+            if (!$goodsSku) {
+               throw new \think\Exception($id."不id存在");
+            }
+            $data = [
+                'title' => $goodsSku['goods']['title'],
+                'image' => $goodsSku['goods']['recommend_image'],
+                'num' => $num,
+                'goods_id' => $goodsSku['goods']['id'],
+                'create_time' => time(),
+            ];
             $get = Cache::hGet(key::userCart($userId), $id);
             if ($get) {
                 $get = json_decode($get, true);
                 $data['num'] = $data['num'] + $get['num'];
+
+            }
+            if ($goodsSku['stock']<$data['num']) {
+                 throw new \think\Exception($goodsSku['goods']['title']."的商品库存不足");
             }
             $res = Cache::hSet(Key::userCart($userId), $id, json_encode($data));
-        } catch (\Exception $E) {
-            return FALSE;
+        } catch (\Exception $e) {
+            return $e->getMessage();
         }
         return $res;
     }
@@ -63,8 +67,6 @@ class Cart extends BusBase
         $skuIdSpecsValueIds = array_column($skus, "specs_value_ids", "id");
         $specsValues = (new SpecsValue())->dealSpecsValue($skuIdSpecsValueIds);
         foreach($res as $k => $v) {
-        dd($stocks);
-
             $price = $skuIdPrice[$k] ?? 0;
             $v = json_decode($v, true);
             if($ids && isset($stocks[$k]) && $stocks[$k] < $v['num']) {

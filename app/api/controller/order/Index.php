@@ -8,8 +8,6 @@ use app\common\lib\Show;
 
 class Index extends AuthBase
 {
-
-
     public function save() {
         $addressId = input("param.address_id", 0, "intval");
         $ids = input("param.ids", "", "trim");
