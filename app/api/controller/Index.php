@@ -9,7 +9,7 @@ class Index extends ApiBase
     public function getRotationChart()
     {
         $goods = (new  \app\common\business\Goods())->getRotationChart();
-        return Show::success($goods, 'ok');
+        return Show::suc cess($goods, 'ok');
 
     }
 
